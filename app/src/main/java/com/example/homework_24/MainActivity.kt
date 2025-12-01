@@ -1,5 +1,7 @@
 package com.example.homework_24
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
@@ -7,13 +9,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.viewModelScope
 import com.example.homework_24.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.contracts.Effect
 import kotlin.getValue
 
 class MainActivity : AppCompatActivity() {
@@ -37,28 +33,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
+        viewModel.result.observe(this) { result ->
+            binding.resultView.text = result.toString()
+            notLoadingUIState()
+        }
+        viewModel.isLoading.observe(this) { isLoading ->
+            if (isLoading) {
+                isLoadingUIState()
 
-        viewModel.result.observe(this) {
-            binding.resultView.text = it.toString()
-            hideProgressBar()
+            }
+            else {
+                notLoadingUIState()
+            }
         }
 
     }
 
     private fun setupListeners() {
-
         binding.loadButton.setOnClickListener {
-            showProgressBar()
+            isLoadingUIState()
             viewModel.getResult()
         }
     }
 
-    private fun hideProgressBar() {
+    private fun notLoadingUIState() {
         binding.progressBar.visibility = View.INVISIBLE
+        binding.loadButton.isClickable = true
+        binding.loadButton.focusable = View.FOCUSABLE
+        binding.loadButton.backgroundTintList = null
     }
 
-    private fun showProgressBar() {
+    private fun isLoadingUIState() {
         binding.progressBar.visibility = View.VISIBLE
+        binding.loadButton.isClickable = false
+        binding.loadButton.focusable = View.NOT_FOCUSABLE
+        binding.loadButton.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
+        binding.loadButton.setBackgroundColor(Color.GRAY)
     }
 
 

@@ -13,28 +13,31 @@ import kotlin.random.Random
 
 class MainActivityViewModel : ViewModel() {
     var result: MutableLiveData<String> = MutableLiveData("Тут будет результат")
+    var isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
+    var loadCount: Int = 0
 
     fun getResult() {
-
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
                     fakeLoad()
                 } catch (e: Exception) {
-                    result.postValue("Ошибка загрузки")
+                    result.postValue("Ошибка загрузки (попытка № ${loadCount.toString()})")
                 }
             }
         }
-
     }
 
     suspend fun fakeLoad() {
-        delay(1500)
+        loadCount++
+        isLoading.postValue(true)
+        Thread.sleep(1500)
         val random = Random.nextInt()
         if (random % 2 == 0) {
-            result.postValue("Данные успешно загружены!")
+            result.postValue("Данные успешно загружены! (попытка № ${loadCount.toString()})")
         } else {
             throw Exception()
         }
+        isLoading.postValue(false)
     }
 }

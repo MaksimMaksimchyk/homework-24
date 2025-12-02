@@ -33,14 +33,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        viewModel.result.observe(this) { result ->
+        viewModel.dataFromServer.observe(this) { result ->
             binding.resultView.text = result.toString()
             notLoadingUIState()
         }
+
         viewModel.isLoading.observe(this) { isLoading ->
             if (isLoading) {
                 isLoadingUIState()
-
             }
             else {
                 notLoadingUIState()

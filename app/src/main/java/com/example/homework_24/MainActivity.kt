@@ -9,7 +9,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.homework_24.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
 import kotlin.getValue
 
 class MainActivity : AppCompatActivity() {
@@ -33,44 +37,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        viewModel.dataFromServer.observe(this) { result ->
-            binding.resultView.text = result.toString()
-            notLoadingUIState()
-        }
-
-        viewModel.isLoading.observe(this) { isLoading ->
-            if (isLoading) {
-                isLoadingUIState()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is MainActivityViewModel.UIstate.Empty -> showEmpty(state.message)
+                        is MainActivityViewModel.UIstate.Error -> showResult(state.message)
+                        is MainActivityViewModel.UIstate.Loading -> showLoading(state.message)
+                        is MainActivityViewModel.UIstate.Success -> showResult(state.result)
+                    }
+                }
             }
-            else {
-                notLoadingUIState()
-            }
         }
-
     }
 
     private fun setupListeners() {
         binding.loadButton.setOnClickListener {
-            isLoadingUIState()
             viewModel.getResult()
         }
     }
 
-    private fun notLoadingUIState() {
+    private fun showEmpty(message: String) {
+        binding.resultView.text = message
+    }
+
+    private fun showResult(result: String) {
+        binding.resultView.text = result
         binding.progressBar.visibility = View.INVISIBLE
         binding.loadButton.isClickable = true
-        binding.loadButton.focusable = View.FOCUSABLE
         binding.loadButton.backgroundTintList = null
     }
 
-    private fun isLoadingUIState() {
+    private fun showLoading(message: String) {
         binding.progressBar.visibility = View.VISIBLE
         binding.loadButton.isClickable = false
-        binding.loadButton.focusable = View.NOT_FOCUSABLE
         binding.loadButton.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
         binding.loadButton.setBackgroundColor(Color.GRAY)
+        binding.resultView.text = message
     }
-
 
 }
 

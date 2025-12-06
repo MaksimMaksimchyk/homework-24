@@ -1,34 +1,30 @@
 package com.example.homework_24
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 class MainActivityViewModel : ViewModel() {
-    private val _dataFromServer: MutableLiveData<String> = MutableLiveData("Тут будет результат")
-    val dataFromServer: LiveData<String> = _dataFromServer
-
-    private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _uiState = MutableStateFlow<UIstate>(UIstate.Empty("Тут будет результат"))
+    val uiState: StateFlow<UIstate> = _uiState.asStateFlow()
 
     fun getResult() {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.value = UIstate.Loading("Загружаем...")
             try {
                 val result = withContext(Dispatchers.IO) {
                     fakeLoad()
                 }
-                _dataFromServer.value = result
-                _isLoading.value = false
+                _uiState.value = UIstate.Success(result)
             } catch (e: Exception) {
-                _dataFromServer.value = e.message
-                _isLoading.value = false
+                _uiState.value = UIstate.Error(e.message ?: "Ошибка загрузки")
             }
         }
     }
@@ -41,5 +37,12 @@ class MainActivityViewModel : ViewModel() {
         } else {
             throw Exception("Какая-то ошибка загрузки")
         }
+    }
+
+    sealed interface UIstate {
+        data class Loading(val message: String) : UIstate
+        data class Success(val result: String) : UIstate
+        data class Error(val message: String) : UIstate
+        data class Empty(val message: String) : UIstate
     }
 }
